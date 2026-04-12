@@ -1,11 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 import httpx
 import json
+from database import init_db, save_trip, get_trip
 
-app = FastAPI(title="Smart Trip Planner API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(title="Smart Trip Planner API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +30,14 @@ class ItineraryRequest(BaseModel):
     days: int
     style: str
     model: str = DEFAULT_MODEL
+
+
+class SaveTripRequest(BaseModel):
+    name: str
+    places: list
+    days: int
+    style: str
+    itinerary: str
 
 
 def build_prompt(places: str, days: int, style: str) -> str:
@@ -84,8 +99,19 @@ async def generate_itinerary(req: ItineraryRequest):
     return StreamingResponse(
         stream_ollama(prompt, req.model),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/api/trips")
+async def create_trip(req: SaveTripRequest):
+    slug = await save_trip(req.name, req.places, req.days, req.style, req.itinerary)
+    return {"slug": slug, "url": f"/trip/{slug}"}
+
+
+@app.get("/api/trips/{slug}")
+async def fetch_trip(slug: str):
+    trip = await get_trip(slug)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    return trip

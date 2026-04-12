@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import SearchBar from "./components/SearchBar";
 import PlaceList from "./components/PlaceList";
 import { Place, Trip } from "./lib/types";
+import SaveTrip from "./components/SaveTrip";
 
 const TripMap = dynamic(() => import("./components/Map"), { ssr: false });
 
@@ -173,6 +174,15 @@ export default function Home() {
                 📅 {tripName || `${days}-Day ${style.charAt(0).toUpperCase() + style.slice(1)} Trip`}
               </h2>
               <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">{itinerary}</pre>
+              {!generating && (
+                <SaveTrip
+                  tripName={tripName}
+                  places={places}
+                  days={days}
+                  style={style}
+                  itinerary={itinerary}
+                />
+              )}
             </div>
           )}
         </div>
