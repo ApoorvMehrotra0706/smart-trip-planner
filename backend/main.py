@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import httpx
 import json
-from database import init_db, save_trip, get_trip, list_trips
+from database import init_db, save_trip, get_trip, list_trips, delete_trip
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -120,3 +120,11 @@ async def fetch_trip(slug: str):
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
     return trip
+
+
+@app.delete("/api/trips/{slug}")
+async def remove_trip(slug: str):
+    deleted = await delete_trip(slug)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    return {"deleted": slug}

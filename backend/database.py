@@ -65,6 +65,13 @@ async def list_trips() -> list:
             ]
 
 
+async def delete_trip(slug: str) -> bool:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("DELETE FROM trips WHERE slug = ?", (slug,))
+        await db.commit()
+        return cursor.rowcount > 0
+
+
 async def get_trip(slug: str) -> dict | None:
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
