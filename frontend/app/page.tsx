@@ -5,6 +5,8 @@ import SearchBar from "./components/SearchBar";
 import PlaceList from "./components/PlaceList";
 import { Place, Trip } from "./lib/types";
 import SaveTrip from "./components/SaveTrip";
+import ExportPDF from "./components/ExportPDF";
+import Link from "next/link";
 
 const TripMap = dynamic(() => import("./components/Map"), { ssr: false });
 
@@ -76,15 +78,19 @@ export default function Home() {
         <span className="text-2xl">🧭</span>
         <h1 className="text-lg font-bold text-slate-100">Smart Trip Planner</h1>
         <span className="text-xs bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded-full border border-violet-700">AI-powered · Open Source</span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          <Link href="/history" className="text-xs text-slate-400 hover:text-violet-400 transition-colors">
+            🕓 History
+          </Link>
           <input
-            className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500 w-52"
+            className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500 w-48"
             placeholder="Trip name..."
             value={tripName}
             onChange={e => setTripName(e.target.value)}
           />
         </div>
       </header>
+
 
       {/* Main layout */}
       <div className="flex flex-1 overflow-hidden">
@@ -175,13 +181,22 @@ export default function Home() {
               </h2>
               <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">{itinerary}</pre>
               {!generating && (
-                <SaveTrip
-                  tripName={tripName}
-                  places={places}
-                  days={days}
-                  style={style}
-                  itinerary={itinerary}
-                />
+                <>
+                  <SaveTrip
+                    tripName={tripName}
+                    places={places}
+                    days={days}
+                    style={style}
+                    itinerary={itinerary}
+                  />
+                  <ExportPDF
+                    tripName={tripName}
+                    places={places}
+                    days={days}
+                    style={style}
+                    itinerary={itinerary}
+                  />
+                </>
               )}
             </div>
           )}

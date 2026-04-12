@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import httpx
 import json
-from database import init_db, save_trip, get_trip
+from database import init_db, save_trip, get_trip, list_trips
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -107,6 +107,11 @@ async def generate_itinerary(req: ItineraryRequest):
 async def create_trip(req: SaveTripRequest):
     slug = await save_trip(req.name, req.places, req.days, req.style, req.itinerary)
     return {"slug": slug, "url": f"/trip/{slug}"}
+
+
+@app.get("/api/trips")
+async def get_all_trips():
+    return await list_trips()
 
 
 @app.get("/api/trips/{slug}")

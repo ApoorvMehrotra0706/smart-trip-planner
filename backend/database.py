@@ -45,6 +45,26 @@ async def save_trip(name: str, places: list, days: int, style: str, itinerary: s
     return slug
 
 
+async def list_trips() -> list:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT slug, name, days, style, created_at, places FROM trips ORDER BY created_at DESC LIMIT 50"
+        ) as cursor:
+            rows = await cursor.fetchall()
+            return [
+                {
+                    "slug": row["slug"],
+                    "name": row["name"],
+                    "days": row["days"],
+                    "style": row["style"],
+                    "created_at": row["created_at"],
+                    "place_count": len(json.loads(row["places"])),
+                }
+                for row in rows
+            ]
+
+
 async def get_trip(slug: str) -> dict | None:
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
