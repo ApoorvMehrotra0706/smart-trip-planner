@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.leaflet-container {
+  background: #1e293b;
+  border-radius: 12px;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(0.85) saturate(1.2);
+}
