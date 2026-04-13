@@ -59,14 +59,24 @@ def build_prompt(places: str, days: int, style: str) -> str:
 
 The trip should be {desc}.
 
-Format exactly like this:
+STRICT FORMAT — follow exactly, no deviations:
 Day 1 - [City]
 Morning: [activity]
 Afternoon: [activity]
 Evening: [activity]
 Tip: [practical tip]
 
-Continue for all {days} days. Be specific with real place names and attractions."""
+Day 2 - [City]
+Morning: [activity]
+Afternoon: [activity]
+Evening: [activity]
+Tip: [practical tip]
+
+Rules:
+- The Day line contains ONLY "Day N - CityName". Nothing else on that line.
+- Every day MUST have Morning, Afternoon, Evening, and Tip — each on its own line with the label.
+- Do NOT skip any label. Do NOT put activity text on the Day line.
+- Continue this exact format for all {days} days. Be specific with real place names."""
 
 
 async def stream_huggingface(prompt: str):

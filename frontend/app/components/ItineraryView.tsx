@@ -45,12 +45,18 @@ function parse(text: string): DayBlock[] {
 
   for (const line of lines) {
     if (/^Day\s+\d+/i.test(line)) {
-      // Strip trailing colon
-      let header = line.replace(/:$/, "").trim();
-      // "Day N - City: description..." → keep only "Day N - City"
-      header = header.replace(/^(Day\s+\d+(?:\s*[-–]\s*[^:]+)?):.*$/, "$1").trim();
+      // Extract "Day N" + optional " - [one word city]" only
+      const dayMatch = line.match(/^(Day\s+\d+(?:\s*[-–]\s*\S+)?)/i);
+      let header = (dayMatch ? dayMatch[1] : line).replace(/:$/, "").trim();
+      const rest = dayMatch ? line.slice(dayMatch[0].length).replace(/^[\s:,]+/, "").trim() : "";
+
       current = { header, segments: [] };
       days.push(current);
+
+      // Prose without a label on the same line → treat as implicit Morning segment
+      if (rest.length > 15) {
+        current.segments.push({ label: "Morning", content: rest, ...LABELS["Morning"] });
+      }
       continue;
     }
 
