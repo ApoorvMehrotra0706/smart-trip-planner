@@ -24,8 +24,6 @@ function normalize(text: string): string {
     .replace(/\.?\s*(Morning):/gi,    "\nMorning:")
     .replace(/\.?\s*(Afternoon):/gi,  "\nAfternoon:")
     .replace(/\.?\s*(Evening):/gi,    "\nEvening:")
-    .replace(/\.?\s*(ing):/gi,        "\nEvening:")   // handle "...city.ing:" artifact
-    .replace(/\.?\s*(noon):/gi,       "\nAfternoon:")  // handle "...city.noon:" artifact
     .replace(/\.?\s*(Tip):/gi,        "\nTip:")
     .replace(/\n{3,}/g, "\n\n");
 }
