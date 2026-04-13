@@ -14,6 +14,7 @@ export default function SaveTrip({ tripName, places, days, style, itinerary }: P
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function save() {
     setSaving(true);
@@ -33,7 +34,7 @@ export default function SaveTrip({ tripName, places, days, style, itinerary }: P
       const url = `${window.location.origin}${data.url}`;
       setShareUrl(url);
     } catch {
-      alert("Could not save trip. Make sure the backend is running.");
+      setError("Could not save trip. Make sure the backend is running.");
     } finally {
       setSaving(false);
     }
