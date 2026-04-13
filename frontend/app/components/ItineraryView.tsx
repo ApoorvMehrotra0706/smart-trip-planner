@@ -20,7 +20,8 @@ const LABELS: Record<string, { icon: string; color: string; bg: string }> = {
 
 function normalize(text: string): string {
   return text
-    .replace(/\.?(Day\s+\d+)/gi,      "\n\n$1")
+    .replace(/\.?\s*(Day\s+\d+)/gi,           "\n\n$1")
+    .replace(/[.!?]\s*(\d+)\s*[-–]\s*/g,     "\n\nDay $1 - ")  // "...text. 2 - City"
     .replace(/\.?\s*(Morning):/gi,    "\nMorning:")
     .replace(/\.?\s*(Afternoon):/gi,  "\nAfternoon:")
     .replace(/\.?\s*(Evening):/gi,    "\nEvening:")
