@@ -20,17 +20,20 @@ const LABELS: Record<string, { icon: string; color: string; bg: string }> = {
 
 function normalize(text: string): string {
   return text
-    // Streaming artifacts: partial label tokens lost during SSE
+    // Fix streaming artifacts FIRST (partial label tokens lost during SSE)
     .replace(/\bnoon:/gi,  "\nAfternoon:")   // "After" lost → "noon:"
     .replace(/\bning:/gi,  "\nEvening:")     // "Eve"  lost → "ning:"
     // Standard day markers
     .replace(/\.?\s*(Day\s+\d+)/gi,           "\n\n$1")
     .replace(/[.!?]\s*(\d+)\s*[-–]\s*/g,     "\n\nDay $1 - ")  // "2 - City"
-    // Segment markers
+    // Segment markers — run Morning first so "ing:" below won't corrupt it
     .replace(/\.?\s*(Morning):/gi,    "\nMorning:")
     .replace(/\.?\s*(Afternoon):/gi,  "\nAfternoon:")
     .replace(/\.?\s*(Evening):/gi,    "\nEvening:")
     .replace(/\.?\s*(Tip):/gi,        "\nTip:")
+    // Remaining streaming artifacts AFTER labeled segments are already normalized
+    .replace(/\bing:/gi,  "\nEvening:")      // "Even" lost → "ing:" (after Morning: is safe)
+    .replace(/[.!?]\s*:/g, "\nTip:")         // "Tip" lost entirely → ".:" or "!:"
     .replace(/\n{3,}/g, "\n\n");
 }
 
@@ -94,9 +97,12 @@ export default function ItineraryView({ text, streaming = false }: { text: strin
     );
   }
 
+  // Filter out days with no segments — avoids empty violet pills from AI format quirks
+  const renderable = days.filter(d => d.segments.length > 0);
+
   return (
     <div className="space-y-6">
-      {days.map((day, di) => (
+      {renderable.map((day, di) => (
         <div key={di}>
           {day.header && (
             <div className="flex items-center gap-2 bg-violet-900/40 border border-violet-600/40 rounded-xl px-4 py-2.5 mb-3">
