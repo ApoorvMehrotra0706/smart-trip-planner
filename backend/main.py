@@ -10,7 +10,7 @@ from database import init_db, save_trip, get_trip, list_trips, delete_trip
 
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 HF_MODEL = os.getenv("HF_MODEL", "mistralai/Mistral-7B-Instruct-v0.3")
-HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
+HF_API_URL = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}/v1/chat/completions"
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
@@ -55,7 +55,7 @@ def build_prompt(places: str, days: int, style: str) -> str:
         "budget": "cost-effective with free attractions, street food, and affordable accommodation tips",
     }
     desc = style_descriptions.get(style, "balanced and enjoyable")
-    return f"""<s>[INST] You are an expert travel planner. Create a detailed {days}-day {style} trip itinerary for: {places}.
+    return f"""You are an expert travel planner. Create a detailed {days}-day {style} trip itinerary for: {places}.
 
 The trip should be {desc}.
 
@@ -66,7 +66,7 @@ Afternoon: [activity]
 Evening: [activity]
 Tip: [practical tip]
 
-Continue for all {days} days. Be specific with real place names and attractions. [/INST]"""
+Continue for all {days} days. Be specific with real place names and attractions."""
 
 
 async def stream_huggingface(prompt: str):
@@ -75,12 +75,10 @@ async def stream_huggingface(prompt: str):
         "Content-Type": "application/json",
     }
     payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 1200,
-            "temperature": 0.7,
-            "return_full_text": False,
-        },
+        "model": HF_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 1200,
+        "temperature": 0.7,
         "stream": True,
     }
     async with httpx.AsyncClient(timeout=120) as client:
@@ -97,10 +95,10 @@ async def stream_huggingface(prompt: str):
                     break
                 try:
                     data = json.loads(raw)
-                    token = data.get("token", {}).get("text", "")
+                    token = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
                     if token:
                         yield f"data: {token}\n\n"
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, IndexError):
                     continue
 
 
