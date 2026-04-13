@@ -46,7 +46,7 @@ function parse(text: string): DayBlock[] {
       continue;
     }
 
-    const match = line.match(/^(Morning|Afternoon|Evening|Tip):\s*(.*)/is);
+    const match = line.match(/^(Morning|Afternoon|Evening|Tip):\s*([\s\S]*)/);
     if (match) {
       const [, label, content] = match;
       const meta = LABELS[label];
