@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Place } from "../../lib/types";
 import Link from "next/link";
 import { API_URL } from "../../lib/api";
+import ItineraryView from "../../components/ItineraryView";
 
 const TripMap = dynamic(() => import("../../components/Map"), { ssr: false });
 
@@ -93,9 +94,7 @@ export default function TripPage() {
           <p className="text-xs text-slate-500 mb-4">
             {trip.places.map(p => p.name).join(" → ")}
           </p>
-          <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">
-            {trip.itinerary}
-          </pre>
+          <ItineraryView text={trip.itinerary} />
         </div>
       </div>
     </div>

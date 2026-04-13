@@ -6,6 +6,7 @@ import PlaceList from "./components/PlaceList";
 import { Place, Trip } from "./lib/types";
 import SaveTrip from "./components/SaveTrip";
 import ExportPDF from "./components/ExportPDF";
+import ItineraryView from "./components/ItineraryView";
 import Link from "next/link";
 import { API_URL } from "./lib/api";
 
@@ -180,7 +181,7 @@ export default function Home() {
               <h2 className="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
                 📅 {tripName || `${days}-Day ${style.charAt(0).toUpperCase() + style.slice(1)} Trip`}
               </h2>
-              <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">{itinerary}</pre>
+              <ItineraryView text={itinerary} />
               {!generating && (
                 <>
                   <SaveTrip
