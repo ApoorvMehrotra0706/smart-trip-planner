@@ -9,8 +9,8 @@ import os
 from database import init_db, save_trip, get_trip, list_trips, delete_trip
 
 HF_TOKEN = os.getenv("HF_TOKEN", "")
-HF_MODEL = os.getenv("HF_MODEL", "mistralai/Mistral-7B-Instruct-v0.3")
-HF_API_URL = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}/v1/chat/completions"
+HF_MODEL = os.getenv("HF_MODEL", "qwen/qwen2.5-7b-instruct")
+HF_API_URL = os.getenv("HF_API_URL", "https://router.huggingface.co/novita/v3/openai/chat/completions")
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
