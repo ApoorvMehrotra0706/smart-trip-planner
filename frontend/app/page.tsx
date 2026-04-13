@@ -181,7 +181,7 @@ export default function Home() {
               <h2 className="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
                 📅 {tripName || `${days}-Day ${style.charAt(0).toUpperCase() + style.slice(1)} Trip`}
               </h2>
-              <ItineraryView text={itinerary} />
+              <ItineraryView text={itinerary} streaming={generating} />
               {!generating && (
                 <>
                   <SaveTrip

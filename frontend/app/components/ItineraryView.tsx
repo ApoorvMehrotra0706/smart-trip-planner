@@ -20,8 +20,13 @@ const LABELS: Record<string, { icon: string; color: string; bg: string }> = {
 
 function normalize(text: string): string {
   return text
+    // Streaming artifacts: partial label tokens lost during SSE
+    .replace(/\bnoon:/gi,  "\nAfternoon:")   // "After" lost → "noon:"
+    .replace(/\bning:/gi,  "\nEvening:")     // "Eve"  lost → "ning:"
+    // Standard day markers
     .replace(/\.?\s*(Day\s+\d+)/gi,           "\n\n$1")
-    .replace(/[.!?]\s*(\d+)\s*[-–]\s*/g,     "\n\nDay $1 - ")  // "...text. 2 - City"
+    .replace(/[.!?]\s*(\d+)\s*[-–]\s*/g,     "\n\nDay $1 - ")  // "2 - City"
+    // Segment markers
     .replace(/\.?\s*(Morning):/gi,    "\nMorning:")
     .replace(/\.?\s*(Afternoon):/gi,  "\nAfternoon:")
     .replace(/\.?\s*(Evening):/gi,    "\nEvening:")
@@ -38,8 +43,10 @@ function parse(text: string): DayBlock[] {
 
   for (const line of lines) {
     if (/^Day\s+\d+/i.test(line)) {
-      // Strip trailing colon from header
-      const header = line.replace(/:$/, "").trim();
+      // Strip trailing colon
+      let header = line.replace(/:$/, "").trim();
+      // "Day N - City: description..." → keep only "Day N - City"
+      header = header.replace(/^(Day\s+\d+(?:\s*[-–]\s*[^:]+)?):.*$/, "$1").trim();
       current = { header, segments: [] };
       days.push(current);
       continue;
@@ -70,7 +77,14 @@ function parse(text: string): DayBlock[] {
   return days;
 }
 
-export default function ItineraryView({ text }: { text: string }) {
+export default function ItineraryView({ text, streaming = false }: { text: string; streaming?: boolean }) {
+  // Show raw text while streaming to avoid garbled partial-parse artifacts
+  if (streaming) {
+    return (
+      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-mono">{text}</p>
+    );
+  }
+
   const days = parse(text);
 
   // Fallback: if parsing yields nothing useful, show plain formatted text
