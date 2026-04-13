@@ -33,7 +33,6 @@ function normalize(text: string): string {
     .replace(/\.?\s*(Tip):/gi,        "\nTip:")
     // Remaining streaming artifacts AFTER labeled segments are already normalized
     .replace(/\bing:/gi,  "\nEvening:")      // "Even" lost → "ing:" (after Morning: is safe)
-    .replace(/[.!?]\s*:/g, "\nTip:")         // "Tip" lost entirely → ".:" or "!:"
     .replace(/\n{3,}/g, "\n\n");
 }
 
@@ -67,13 +66,9 @@ function parse(text: string): DayBlock[] {
       continue;
     }
 
-    // Plain text — append to last segment or day header
-    if (current) {
-      if (current.segments.length > 0) {
-        current.segments[current.segments.length - 1].content += " " + line;
-      } else {
-        current.header += " " + line;
-      }
+    // Plain text — append to last segment; discard if no segment yet (keeps header clean)
+    if (current && current.segments.length > 0) {
+      current.segments[current.segments.length - 1].content += " " + line;
     }
   }
 
