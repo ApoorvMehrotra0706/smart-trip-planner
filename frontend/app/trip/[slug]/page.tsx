@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Place } from "../../lib/types";
 import Link from "next/link";
+import { API_URL } from "../../lib/api";
 
 const TripMap = dynamic(() => import("../../components/Map"), { ssr: false });
 
@@ -24,7 +25,7 @@ export default function TripPage() {
 
   useEffect(() => {
     if (!slug) return;
-    fetch(`http://localhost:8000/api/trips/${slug}`)
+    fetch(`${API_URL}/api/trips/${slug}`)
       .then(r => {
         if (r.status === 404) { setNotFound(true); return null; }
         return r.json();

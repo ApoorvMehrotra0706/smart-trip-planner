@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { API_URL } from "../lib/api";
 
 interface TripSummary {
   slug: string;
@@ -20,7 +21,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/trips")
+    fetch(`${API_URL}/api/trips`)
       .then(r => r.json())
       .then(setTrips)
       .catch(() => setTrips([]))

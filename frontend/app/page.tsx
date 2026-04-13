@@ -7,6 +7,7 @@ import { Place, Trip } from "./lib/types";
 import SaveTrip from "./components/SaveTrip";
 import ExportPDF from "./components/ExportPDF";
 import Link from "next/link";
+import { API_URL } from "./lib/api";
 
 const TripMap = dynamic(() => import("./components/Map"), { ssr: false });
 
@@ -41,7 +42,7 @@ export default function Home() {
     const placeNames = places.map(p => p.name).join(", ");
 
     try {
-      const res = await fetch("http://localhost:8000/api/itinerary", {
+      const res = await fetch(`${API_URL}/api/itinerary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ places: placeNames, days, style }),

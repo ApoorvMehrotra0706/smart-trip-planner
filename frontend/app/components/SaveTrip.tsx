@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Place, Trip } from "../lib/types";
+import { API_URL } from "../lib/api";
 
 interface Props {
   tripName: string;
@@ -30,7 +31,7 @@ export default function SaveTrip({ tripName, places, days, style, itinerary }: P
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/trips", {
+      const res = await fetch(`${API_URL}/api/trips`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
