@@ -21,7 +21,7 @@ function getSafeOrigin(): string {
 }
 
 export default function SaveTrip({ tripName, places, styles, itinerary }: Props) {
-  const days = places.reduce((s, p) => s + p.days, 0);
+  const days = places.reduce((s, p) => s + (p.days ?? 3), 0);
   const style = styles.join(", ");
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);

@@ -26,7 +26,7 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [itinerary, setItinerary] = useState<string | null>(null);
 
-  const totalDays = places.reduce((s, p) => s + p.days, 0);
+  const totalDays = places.reduce((s, p) => s + (p.days ?? 3), 0);
   const styleLabel = styles.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" + ");
 
   function addPlace(place: Place) {

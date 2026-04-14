@@ -5,7 +5,7 @@ export interface Place {
   lat: number;
   lon: number;
   type: string;
-  days: number;       // per-city duration
+  days?: number;      // per-city duration (set when added to trip, default 3)
 }
 
 export interface Trip {

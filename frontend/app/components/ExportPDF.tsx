@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function ExportPDF({ tripName, places, styles, itinerary }: Props) {
-  const days = places.reduce((s, p) => s + p.days, 0);
+  const days = places.reduce((s, p) => s + (p.days ?? 3), 0);
   const style = styles.join(" + ");
   function exportPDF() {
     const styleEmojis: Record<string, string> = {
