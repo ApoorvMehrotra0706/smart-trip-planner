@@ -34,8 +34,7 @@ app.add_middleware(
 
 
 class ItineraryRequest(BaseModel):
-    cities: list   # [{"name": str, "days": int}]
-    styles: list   # ["relaxed", "cultural", ...]
+    cities: list   # [{"name": str, "days": int, "styles": list[str]}]
 
 
 class SaveTripRequest(BaseModel):
@@ -46,22 +45,26 @@ class SaveTripRequest(BaseModel):
     itinerary: str
 
 
-def build_prompt(cities: list, styles: list) -> str:
+def build_prompt(cities: list) -> str:
     style_descriptions = {
         "adventure": "action-packed with outdoor activities, hiking, and thrilling experiences",
         "relaxed": "leisurely with plenty of rest, scenic walks, and comfortable dining",
         "cultural": "rich in museums, historical sites, local traditions, and authentic cuisine",
         "budget": "cost-effective with free attractions, street food, and affordable accommodation tips",
     }
-    style_desc = " and ".join(
-        style_descriptions.get(s, "balanced and enjoyable") for s in styles
-    )
-    style_label = " + ".join(s.capitalize() for s in styles)
 
-    city_schedule = "\n".join(
-        f"  - {c['name']}: {c['days']} day{'s' if c['days'] > 1 else ''}"
-        for c in cities
-    )
+    city_lines = []
+    for c in cities:
+        city_styles = c.get("styles", ["relaxed"])
+        style_label = " + ".join(s.capitalize() for s in city_styles)
+        style_desc = " and ".join(
+            style_descriptions.get(s, "balanced and enjoyable") for s in city_styles
+        )
+        days = c["days"]
+        city_lines.append(
+            f"  - {c['name']}: {days} day{'s' if days > 1 else ''} ({style_label} — {style_desc})"
+        )
+    city_schedule = "\n".join(city_lines)
     total_days = sum(c["days"] for c in cities)
 
     # Build the example format showing day numbering across cities
@@ -78,9 +81,9 @@ def build_prompt(cities: list, styles: list) -> str:
 
     return f"""You are an expert travel planner. Create a detailed multi-city trip itinerary.
 
-Trip style: {style_label} — {style_desc}.
+Each city has its own travel style — follow it closely for that city's days.
 
-Cities and durations:
+Cities, durations, and styles:
 {city_schedule}
 
 STRICT FORMAT — follow exactly for all {total_days} days:
@@ -91,7 +94,8 @@ Rules:
 - Every day MUST have Morning, Afternoon, Evening, and Tip — each on its own line with the label.
 - Do NOT skip any label. Do NOT put activity text on the Day line.
 - Number days consecutively across all cities (Day 1, Day 2, ..., Day {total_days}).
-- Be specific with real place names and attractions for each city."""
+- Be specific with real place names and attractions for each city.
+- Match each city's activities to its assigned travel style."""
 
 
 async def stream_huggingface(prompt: str):
@@ -162,7 +166,7 @@ async def health():
 
 @app.post("/api/itinerary")
 async def generate_itinerary(req: ItineraryRequest):
-    prompt = build_prompt(req.cities, req.styles)
+    prompt = build_prompt(req.cities)
     return StreamingResponse(
         get_stream(prompt),
         media_type="text/event-stream",

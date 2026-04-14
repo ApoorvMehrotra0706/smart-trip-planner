@@ -1,13 +1,22 @@
 "use client";
 import { Place } from "../lib/types";
 
+const STYLES = [
+  { value: "adventure", emoji: "🧗" },
+  { value: "relaxed",   emoji: "🌴" },
+  { value: "cultural",  emoji: "🏛️" },
+  { value: "budget",    emoji: "💰" },
+];
+
 interface Props {
   places: Place[];
   onRemove: (id: string) => void;
   onDaysChange: (id: string, days: number) => void;
+  onStyleToggle: (id: string, style: string) => void;
+  onMove: (id: string, direction: "up" | "down") => void;
 }
 
-export default function PlaceList({ places, onRemove, onDaysChange }: Props) {
+export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggle, onMove }: Props) {
   if (places.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-slate-500">
@@ -21,43 +30,83 @@ export default function PlaceList({ places, onRemove, onDaysChange }: Props) {
 
   return (
     <div className="space-y-2">
-      {places.map((place, i) => (
-        <div key={place.id} className="flex items-center gap-3 bg-slate-800 rounded-xl px-4 py-3 group">
-          <span className="w-6 h-6 rounded-full bg-violet-600 text-white text-xs flex items-center justify-center font-bold shrink-0">
-            {i + 1}
-          </span>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-slate-100 truncate">{place.name}</div>
-            <div className="text-xs text-slate-400 truncate">{place.displayName}</div>
-          </div>
+      {places.map((place, i) => {
+        const cityStyles = place.styles ?? ["relaxed"];
+        return (
+          <div key={place.id} className="bg-slate-800 rounded-xl px-4 py-3 space-y-2">
 
-          {/* Per-city duration control */}
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={() => onDaysChange(place.id, Math.max(1, (place.days ?? 3) - 1))}
-              className="w-5 h-5 rounded bg-slate-700 text-slate-300 text-xs flex items-center justify-center hover:bg-slate-600 transition-colors"
-            >
-              −
-            </button>
-            <span className="text-xs text-violet-400 w-7 text-center font-mono">{place.days ?? 3}d</span>
-            <button
-              onClick={() => onDaysChange(place.id, Math.min(14, (place.days ?? 3) + 1))}
-              className="w-5 h-5 rounded bg-slate-700 text-slate-300 text-xs flex items-center justify-center hover:bg-slate-600 transition-colors"
-            >
-              +
-            </button>
-          </div>
+            {/* Top row: number + name + days + move + remove */}
+            <div className="flex items-center gap-3">
+              <span className="w-6 h-6 rounded-full bg-violet-600 text-white text-xs flex items-center justify-center font-bold shrink-0">
+                {i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-slate-100 truncate">{place.name}</div>
+                <div className="text-xs text-slate-400 truncate">{place.displayName}</div>
+              </div>
 
-          <button
-            onClick={() => onRemove(place.id)}
-            className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      ))}
+              {/* Days control */}
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => onDaysChange(place.id, Math.max(1, (place.days ?? 3) - 1))}
+                  className="w-5 h-5 rounded bg-slate-700 text-slate-300 text-xs flex items-center justify-center hover:bg-slate-600 transition-colors"
+                >−</button>
+                <span className="text-xs text-violet-400 w-7 text-center font-mono">{place.days ?? 3}d</span>
+                <button
+                  onClick={() => onDaysChange(place.id, Math.min(14, (place.days ?? 3) + 1))}
+                  className="w-5 h-5 rounded bg-slate-700 text-slate-300 text-xs flex items-center justify-center hover:bg-slate-600 transition-colors"
+                >+</button>
+              </div>
+
+              {/* Up / Down */}
+              <div className="flex flex-col gap-0.5 shrink-0">
+                <button
+                  onClick={() => onMove(place.id, "up")}
+                  disabled={i === 0}
+                  className="w-5 h-4 rounded text-slate-400 hover:text-violet-400 disabled:opacity-20 flex items-center justify-center transition-colors"
+                  title="Move up"
+                >▲</button>
+                <button
+                  onClick={() => onMove(place.id, "down")}
+                  disabled={i === places.length - 1}
+                  className="w-5 h-4 rounded text-slate-400 hover:text-violet-400 disabled:opacity-20 flex items-center justify-center transition-colors"
+                  title="Move down"
+                >▼</button>
+              </div>
+
+              {/* Remove */}
+              <button
+                onClick={() => onRemove(place.id)}
+                className="text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                title="Remove city"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Per-city style row */}
+            <div className="flex gap-1.5 pl-9">
+              {STYLES.map(s => (
+                <button
+                  key={s.value}
+                  onClick={() => onStyleToggle(place.id, s.value)}
+                  title={s.value.charAt(0).toUpperCase() + s.value.slice(1)}
+                  className={`text-base px-1.5 py-0.5 rounded-lg border transition-all ${
+                    cityStyles.includes(s.value)
+                      ? "border-violet-500 bg-violet-900/50"
+                      : "border-slate-700 bg-slate-700/30 opacity-40 hover:opacity-70"
+                  }`}
+                >
+                  {s.emoji}
+                </button>
+              ))}
+            </div>
+
+          </div>
+        );
+      })}
 
       {places.length > 0 && (
         <div className="text-xs text-slate-500 text-right pt-1">

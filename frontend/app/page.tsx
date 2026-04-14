@@ -12,26 +12,19 @@ import { API_URL } from "./lib/api";
 
 const TripMap = dynamic(() => import("./components/Map"), { ssr: false });
 
-const STYLES = [
-  { value: "adventure", label: "Adventure", emoji: "🧗" },
-  { value: "relaxed", label: "Relaxed", emoji: "🌴" },
-  { value: "cultural", label: "Cultural", emoji: "🏛️" },
-  { value: "budget", label: "Budget", emoji: "💰" },
-] as const;
-
 export default function Home() {
   const [places, setPlaces] = useState<Place[]>([]);
-  const [styles, setStyles] = useState<string[]>(["relaxed"]);
   const [tripName, setTripName] = useState("");
   const [generating, setGenerating] = useState(false);
   const [itinerary, setItinerary] = useState<string | null>(null);
 
   const totalDays = places.reduce((s, p) => s + (p.days ?? 3), 0);
-  const styleLabel = styles.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" + ");
+  const allStyles = [...new Set(places.flatMap(p => p.styles ?? ["relaxed"]))];
+  const styleLabel = allStyles.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" + ");
 
   function addPlace(place: Place) {
     setPlaces(prev =>
-      prev.find(p => p.id === place.id) ? prev : [...prev, { ...place, days: 3 }]
+      prev.find(p => p.id === place.id) ? prev : [...prev, { ...place, days: 3, styles: ["relaxed"] }]
     );
   }
 
@@ -43,12 +36,27 @@ export default function Home() {
     setPlaces(prev => prev.map(p => p.id === id ? { ...p, days } : p));
   }
 
-  function toggleStyle(value: string) {
-    setStyles(prev =>
-      prev.includes(value)
-        ? prev.length > 1 ? prev.filter(s => s !== value) : prev  // keep at least 1
-        : [...prev, value]
-    );
+  function toggleCityStyle(id: string, style: string) {
+    setPlaces(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const current = p.styles ?? ["relaxed"];
+      const next = current.includes(style)
+        ? current.length > 1 ? current.filter(s => s !== style) : current
+        : [...current, style];
+      return { ...p, styles: next };
+    }));
+  }
+
+  function movePlace(id: string, direction: "up" | "down") {
+    setPlaces(prev => {
+      const idx = prev.findIndex(p => p.id === id);
+      if (idx < 0) return prev;
+      const next = [...prev];
+      const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= next.length) return prev;
+      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+      return next;
+    });
   }
 
   async function generateItinerary() {
@@ -61,8 +69,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cities: places.map(p => ({ name: p.name, days: p.days })),
-          styles,
+          cities: places.map(p => ({ name: p.name, days: p.days ?? 3, styles: p.styles ?? ["relaxed"] })),
         }),
       });
 
@@ -128,46 +135,29 @@ export default function Home() {
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
                 Your Itinerary {places.length > 0 && <span className="text-violet-400">({places.length} {places.length === 1 ? "city" : "cities"})</span>}
               </label>
-              <PlaceList places={places} onRemove={removePlace} onDaysChange={changeDays} />
+              <PlaceList
+                places={places}
+                onRemove={removePlace}
+                onDaysChange={changeDays}
+                onStyleToggle={toggleCityStyle}
+                onMove={movePlace}
+              />
             </div>
 
-            {/* Style + generate */}
+            {/* Generate button */}
             {places.length > 0 && (
-              <>
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-                    Style <span className="text-slate-600 normal-case font-normal">(pick one or more)</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {STYLES.map(s => (
-                      <button
-                        key={s.value}
-                        onClick={() => toggleStyle(s.value)}
-                        className={`py-2 rounded-xl text-sm font-medium transition-all border ${
-                          styles.includes(s.value)
-                            ? "bg-violet-600 border-violet-500 text-white"
-                            : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"
-                        }`}
-                      >
-                        {s.emoji} {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={generateItinerary}
-                  disabled={generating}
-                  className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40"
-                >
-                  {generating ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Generating...
-                    </>
-                  ) : "✨ Generate Itinerary"}
-                </button>
-              </>
+              <button
+                onClick={generateItinerary}
+                disabled={generating}
+                className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40"
+              >
+                {generating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generating...
+                  </>
+                ) : "✨ Generate Itinerary"}
+              </button>
             )}
           </div>
         </div>
@@ -191,13 +181,13 @@ export default function Home() {
                   <SaveTrip
                     tripName={tripName}
                     places={places}
-                    styles={styles}
+                    styles={allStyles}
                     itinerary={itinerary}
                   />
                   <ExportPDF
                     tripName={tripName}
                     places={places}
-                    styles={styles}
+                    styles={allStyles}
                     itinerary={itinerary}
                   />
                 </>
