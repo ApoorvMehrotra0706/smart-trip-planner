@@ -5,6 +5,7 @@ export interface Place {
   lat: number;
   lon: number;
   type: string;
+  days: number;       // per-city duration
 }
 
 export interface Trip {
@@ -12,7 +13,7 @@ export interface Trip {
   name: string;
   places: Place[];
   days: number;
-  style: "adventure" | "relaxed" | "cultural" | "budget";
+  style: string;
   itinerary: ItineraryDay[] | null;
   createdAt: string;
 }

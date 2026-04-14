@@ -4,9 +4,10 @@ import { Place } from "../lib/types";
 interface Props {
   places: Place[];
   onRemove: (id: string) => void;
+  onDaysChange: (id: string, days: number) => void;
 }
 
-export default function PlaceList({ places, onRemove }: Props) {
+export default function PlaceList({ places, onRemove, onDaysChange }: Props) {
   if (places.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-slate-500">
@@ -29,6 +30,24 @@ export default function PlaceList({ places, onRemove }: Props) {
             <div className="text-sm font-medium text-slate-100 truncate">{place.name}</div>
             <div className="text-xs text-slate-400 truncate">{place.displayName}</div>
           </div>
+
+          {/* Per-city duration control */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => onDaysChange(place.id, Math.max(1, place.days - 1))}
+              className="w-5 h-5 rounded bg-slate-700 text-slate-300 text-xs flex items-center justify-center hover:bg-slate-600 transition-colors"
+            >
+              −
+            </button>
+            <span className="text-xs text-violet-400 w-7 text-center font-mono">{place.days}d</span>
+            <button
+              onClick={() => onDaysChange(place.id, Math.min(14, place.days + 1))}
+              className="w-5 h-5 rounded bg-slate-700 text-slate-300 text-xs flex items-center justify-center hover:bg-slate-600 transition-colors"
+            >
+              +
+            </button>
+          </div>
+
           <button
             onClick={() => onRemove(place.id)}
             className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all"
@@ -39,6 +58,12 @@ export default function PlaceList({ places, onRemove }: Props) {
           </button>
         </div>
       ))}
+
+      {places.length > 0 && (
+        <div className="text-xs text-slate-500 text-right pt-1">
+          Total: <span className="text-violet-400 font-medium">{places.reduce((s, p) => s + p.days, 0)} days</span>
+        </div>
+      )}
     </div>
   );
 }

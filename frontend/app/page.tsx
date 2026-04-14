@@ -3,7 +3,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import SearchBar from "./components/SearchBar";
 import PlaceList from "./components/PlaceList";
-import { Place, Trip } from "./lib/types";
+import { Place } from "./lib/types";
 import SaveTrip from "./components/SaveTrip";
 import ExportPDF from "./components/ExportPDF";
 import ItineraryView from "./components/ItineraryView";
@@ -21,18 +21,34 @@ const STYLES = [
 
 export default function Home() {
   const [places, setPlaces] = useState<Place[]>([]);
-  const [days, setDays] = useState(3);
-  const [style, setStyle] = useState<Trip["style"]>("relaxed");
+  const [styles, setStyles] = useState<string[]>(["relaxed"]);
   const [tripName, setTripName] = useState("");
   const [generating, setGenerating] = useState(false);
   const [itinerary, setItinerary] = useState<string | null>(null);
 
+  const totalDays = places.reduce((s, p) => s + p.days, 0);
+  const styleLabel = styles.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" + ");
+
   function addPlace(place: Place) {
-    setPlaces(prev => prev.find(p => p.id === place.id) ? prev : [...prev, place]);
+    setPlaces(prev =>
+      prev.find(p => p.id === place.id) ? prev : [...prev, { ...place, days: 3 }]
+    );
   }
 
   function removePlace(id: string) {
     setPlaces(prev => prev.filter(p => p.id !== id));
+  }
+
+  function changeDays(id: string, days: number) {
+    setPlaces(prev => prev.map(p => p.id === id ? { ...p, days } : p));
+  }
+
+  function toggleStyle(value: string) {
+    setStyles(prev =>
+      prev.includes(value)
+        ? prev.length > 1 ? prev.filter(s => s !== value) : prev  // keep at least 1
+        : [...prev, value]
+    );
   }
 
   async function generateItinerary() {
@@ -40,13 +56,14 @@ export default function Home() {
     setGenerating(true);
     setItinerary(null);
 
-    const placeNames = places.map(p => p.name).join(", ");
-
     try {
       const res = await fetch(`${API_URL}/api/itinerary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ places: placeNames, days, style }),
+        body: JSON.stringify({
+          cities: places.map(p => ({ name: p.name, days: p.days })),
+          styles,
+        }),
       });
 
       if (!res.body) throw new Error("No response");
@@ -93,7 +110,6 @@ export default function Home() {
         </div>
       </header>
 
-
       {/* Main layout */}
       <div className="flex flex-1 overflow-hidden">
 
@@ -103,44 +119,32 @@ export default function Home() {
 
             {/* Search */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Add Places</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Add Cities</label>
               <SearchBar onAdd={addPlace} />
             </div>
 
-            {/* Place list */}
+            {/* Place list with per-city duration */}
             <div>
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-                Your Places {places.length > 0 && <span className="text-violet-400">({places.length})</span>}
+                Your Itinerary {places.length > 0 && <span className="text-violet-400">({places.length} {places.length === 1 ? "city" : "cities"})</span>}
               </label>
-              <PlaceList places={places} onRemove={removePlace} />
+              <PlaceList places={places} onRemove={removePlace} onDaysChange={changeDays} />
             </div>
 
-            {/* Trip settings */}
+            {/* Style + generate */}
             {places.length > 0 && (
               <>
                 <div>
                   <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-                    Duration: <span className="text-violet-400">{days} day{days > 1 ? "s" : ""}</span>
+                    Style <span className="text-slate-600 normal-case font-normal">(pick one or more)</span>
                   </label>
-                  <input
-                    type="range" min={1} max={14} value={days}
-                    onChange={e => setDays(Number(e.target.value))}
-                    className="w-full accent-violet-500"
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>1 day</span><span>14 days</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Style</label>
                   <div className="grid grid-cols-2 gap-2">
                     {STYLES.map(s => (
                       <button
                         key={s.value}
-                        onClick={() => setStyle(s.value)}
+                        onClick={() => toggleStyle(s.value)}
                         className={`py-2 rounded-xl text-sm font-medium transition-all border ${
-                          style === s.value
+                          styles.includes(s.value)
                             ? "bg-violet-600 border-violet-500 text-white"
                             : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"
                         }`}
@@ -179,7 +183,7 @@ export default function Home() {
           {itinerary && (
             <div className="w-1/2 border-l border-slate-800 overflow-y-auto p-6 bg-slate-900/50">
               <h2 className="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
-                📅 {tripName || `${days}-Day ${style.charAt(0).toUpperCase() + style.slice(1)} Trip`}
+                📅 {tripName || `${totalDays}-Day ${styleLabel} Trip`}
               </h2>
               <ItineraryView text={itinerary} streaming={generating} />
               {!generating && (
@@ -187,15 +191,13 @@ export default function Home() {
                   <SaveTrip
                     tripName={tripName}
                     places={places}
-                    days={days}
-                    style={style}
+                    styles={styles}
                     itinerary={itinerary}
                   />
                   <ExportPDF
                     tripName={tripName}
                     places={places}
-                    days={days}
-                    style={style}
+                    styles={styles}
                     itinerary={itinerary}
                   />
                 </>

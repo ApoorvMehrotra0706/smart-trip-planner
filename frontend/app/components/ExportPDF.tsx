@@ -1,15 +1,16 @@
 "use client";
-import { Place, Trip } from "../lib/types";
+import { Place } from "../lib/types";
 
 interface Props {
   tripName: string;
   places: Place[];
-  days: number;
-  style: Trip["style"];
+  styles: string[];
   itinerary: string;
 }
 
-export default function ExportPDF({ tripName, places, days, style, itinerary }: Props) {
+export default function ExportPDF({ tripName, places, styles, itinerary }: Props) {
+  const days = places.reduce((s, p) => s + p.days, 0);
+  const style = styles.join(" + ");
   function exportPDF() {
     const styleEmojis: Record<string, string> = {
       adventure: "🧗", relaxed: "🌴", cultural: "🏛️", budget: "💰",

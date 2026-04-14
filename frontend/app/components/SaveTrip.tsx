@@ -1,13 +1,12 @@
 "use client";
 import { useState } from "react";
-import { Place, Trip } from "../lib/types";
+import { Place } from "../lib/types";
 import { API_URL } from "../lib/api";
 
 interface Props {
   tripName: string;
   places: Place[];
-  days: number;
-  style: Trip["style"];
+  styles: string[];
   itinerary: string;
 }
 
@@ -21,7 +20,9 @@ function getSafeOrigin(): string {
   }
 }
 
-export default function SaveTrip({ tripName, places, days, style, itinerary }: Props) {
+export default function SaveTrip({ tripName, places, styles, itinerary }: Props) {
+  const days = places.reduce((s, p) => s + p.days, 0);
+  const style = styles.join(", ");
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
