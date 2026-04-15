@@ -61,23 +61,37 @@ def build_prompt(cities: list) -> str:
             style_descriptions.get(s, "balanced and enjoyable") for s in city_styles
         )
         days = c["days"]
+        hotel = c.get("hotel", "").strip()
+        hotel_note = f", staying at {hotel}" if hotel else ""
         city_lines.append(
-            f"  - {c['name']}: {days} day{'s' if days > 1 else ''} ({style_label} — {style_desc})"
+            f"  - {c['name']}: {days} day{'s' if days > 1 else ''} ({style_label} — {style_desc}){hotel_note}"
         )
     city_schedule = "\n".join(city_lines)
     total_days = sum(c["days"] for c in cities)
 
-    # Build the example format showing day numbering across cities
+    # Build example format — include Travel line only when hotel is provided
+    any_hotel = any(c.get("hotel", "").strip() for c in cities)
     example_lines = []
     day_num = 1
     for c in cities:
+        hotel = c.get("hotel", "").strip()
+        travel_example = (
+            f"\nTravel: From {hotel}, take [metro/bus/taxi] to [first attraction] — ~[X] min, ~[local currency + cost]"
+            if hotel else ""
+        )
         for _ in range(c["days"]):
             example_lines.append(
                 f"Day {day_num} - {c['name']}\n"
-                f"Morning: [activity]\nAfternoon: [activity]\nEvening: [activity]\nTip: [practical tip]"
+                f"Morning: [activity]\nAfternoon: [activity]\nEvening: [activity]\n"
+                f"Tip: [practical tip]{travel_example}"
             )
             day_num += 1
     example_format = "\n\n".join(example_lines)
+
+    travel_rule = (
+        "\n- Every day MUST include a Travel line (after Tip) showing how to get from the accommodation to that day's first attraction, including transport mode, estimated time, and estimated cost in local currency."
+        if any_hotel else ""
+    )
 
     return f"""You are an expert travel planner. Create a detailed multi-city trip itinerary.
 
@@ -95,7 +109,7 @@ Rules:
 - Do NOT skip any label. Do NOT put activity text on the Day line.
 - Number days consecutively across all cities (Day 1, Day 2, ..., Day {total_days}).
 - Be specific with real place names and attractions for each city.
-- Match each city's activities to its assigned travel style."""
+- Match each city's activities to its assigned travel style.{travel_rule}"""
 
 
 async def stream_groq(prompt: str):

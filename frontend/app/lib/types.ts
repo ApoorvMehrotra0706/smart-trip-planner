@@ -7,6 +7,7 @@ export interface Place {
   type: string;
   days?: number;      // per-city duration (set when added to trip, default 3)
   styles?: string[];  // per-city travel styles (default ["relaxed"])
+  hotel?: string;     // accommodation address / hotel name
 }
 
 export interface Trip {

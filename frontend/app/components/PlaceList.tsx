@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Place } from "../lib/types";
 
 const STYLES = [
@@ -14,9 +15,34 @@ interface Props {
   onDaysChange: (id: string, days: number) => void;
   onStyleToggle: (id: string, style: string) => void;
   onMove: (id: string, direction: "up" | "down") => void;
+  onHotelChange: (id: string, hotel: string) => void;
 }
 
-export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggle, onMove }: Props) {
+function HotelInput({ place, onHotelChange }: { place: Place; onHotelChange: (id: string, hotel: string) => void }) {
+  const [open, setOpen] = useState(!!place.hotel);
+  return (
+    <div className="pl-9">
+      {!open ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="text-xs text-slate-500 hover:text-violet-400 transition-colors"
+        >
+          + Add accommodation
+        </button>
+      ) : (
+        <input
+          type="text"
+          value={place.hotel ?? ""}
+          onChange={e => onHotelChange(place.id, e.target.value)}
+          placeholder="Hotel name or address..."
+          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500"
+        />
+      )}
+    </div>
+  );
+}
+
+export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggle, onMove, onHotelChange }: Props) {
   if (places.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-slate-500">
@@ -87,7 +113,7 @@ export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggl
             </div>
 
             {/* Per-city style row */}
-            <div className="flex gap-1.5 pl-9">
+            <div className="flex flex-wrap gap-1.5 pl-9">
               {STYLES.map(s => (
                 <button
                   key={s.value}
@@ -103,6 +129,9 @@ export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggl
                 </button>
               ))}
             </div>
+
+            {/* Hotel / accommodation */}
+            <HotelInput place={place} onHotelChange={onHotelChange} />
 
           </div>
         );

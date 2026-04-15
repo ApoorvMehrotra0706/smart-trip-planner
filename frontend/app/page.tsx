@@ -36,6 +36,10 @@ export default function Home() {
     setPlaces(prev => prev.map(p => p.id === id ? { ...p, days } : p));
   }
 
+  function changeHotel(id: string, hotel: string) {
+    setPlaces(prev => prev.map(p => p.id === id ? { ...p, hotel } : p));
+  }
+
   function toggleCityStyle(id: string, style: string) {
     setPlaces(prev => prev.map(p => {
       if (p.id !== id) return p;
@@ -69,7 +73,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cities: places.map(p => ({ name: p.name, days: p.days ?? 3, styles: p.styles ?? ["relaxed"] })),
+          cities: places.map(p => ({ name: p.name, days: p.days ?? 3, styles: p.styles ?? ["relaxed"], hotel: p.hotel ?? "" })),
         }),
       });
 
@@ -141,6 +145,7 @@ export default function Home() {
                 onDaysChange={changeDays}
                 onStyleToggle={toggleCityStyle}
                 onMove={movePlace}
+                onHotelChange={changeHotel}
               />
             </div>
 
