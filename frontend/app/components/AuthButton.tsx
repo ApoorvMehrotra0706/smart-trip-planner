@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 export default function AuthButton() {
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -15,6 +16,14 @@ export default function AuthButton() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  function toggleOpen() {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    }
+    setOpen(o => !o);
+  }
 
   if (status === "loading") {
     return <div className="w-9 h-9 rounded-full bg-slate-700 animate-pulse" />;
@@ -32,7 +41,7 @@ export default function AuthButton() {
     return (
       <div className="relative" ref={ref}>
         <button
-          onClick={() => setOpen(o => !o)}
+          onClick={toggleOpen}
           className="flex items-center gap-2 hover:bg-slate-800 rounded-xl px-2 py-1.5 transition-all"
         >
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-sm font-bold text-white shrink-0 ring-2 ring-violet-500/30 shadow-lg shadow-violet-900/40">
@@ -44,7 +53,10 @@ export default function AuthButton() {
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-2 w-52 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden z-50">
+          <div
+            className="fixed w-52 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden z-[9999]"
+            style={{ top: pos.top, right: pos.right }}
+          >
             {/* User info header */}
             <div className="px-4 py-3 border-b border-slate-800">
               <p className="text-sm font-semibold text-slate-100 truncate">{fullName}</p>
