@@ -108,18 +108,19 @@ export default function Home() {
       <header className="flex items-center gap-3 px-6 py-4 bg-slate-900 border-b border-slate-800 shrink-0">
         <span className="text-2xl">🧭</span>
         <h1 className="text-lg font-bold text-slate-100">Smart Trip Planner</h1>
-        <span className="text-xs bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded-full border border-violet-700">AI-powered · Open Source</span>
+        <span className="text-xs bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded-full border border-violet-700">AI-powered</span>
         <div className="ml-auto flex items-center gap-3">
-          <Link href="/history" className="text-xs text-slate-400 hover:text-violet-400 transition-colors">
-            🕓 History
-          </Link>
-          <AuthButton />
           <input
-            className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500 w-48"
+            className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 w-44 transition-all"
             placeholder="Trip name..."
             value={tripName}
             onChange={e => setTripName(e.target.value)}
           />
+          <div className="w-px h-5 bg-slate-700" />
+          <Link href="/history" className="text-sm text-slate-400 hover:text-violet-400 transition-colors flex items-center gap-1.5">
+            <span>🕓</span> History
+          </Link>
+          <AuthButton />
         </div>
       </header>
 
