@@ -102,16 +102,15 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-950">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#0d0d12]">
 
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 py-3 bg-slate-900 border-b border-slate-800/80 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center text-lg shadow-lg shadow-violet-900/40">
+      <header className="flex items-center gap-3 px-5 bg-[#111118] border-b border-white/5 shrink-0" style={{ height: "60px" }}>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-xl shadow-lg shadow-violet-900/40 shrink-0">
             🧭
           </div>
-          <span className="font-bold text-slate-100 text-base">Smart Trip Planner</span>
-          <span className="text-[11px] bg-violet-950 text-violet-400 px-2 py-0.5 rounded-full border border-violet-800/60 font-medium">AI</span>
+          <span className="font-bold text-zinc-100 text-base tracking-tight">Smart Trip Planner</span>
         </div>
         <div className="ml-auto">
           <AuthButton />
@@ -121,23 +120,20 @@ export default function Home() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Left panel */}
-        <div className="w-72 flex flex-col bg-slate-900 border-r border-slate-800/80 overflow-y-auto shrink-0">
-          <div className="p-5 space-y-6">
+        {/* Left sidebar */}
+        <aside className="w-[300px] flex flex-col bg-[#111118] border-r border-white/5 overflow-y-auto shrink-0">
+          <div className="px-4 py-5 space-y-6">
 
             {/* Search section */}
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Search cities</p>
+              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-3">Search cities</p>
               <SearchBar onAdd={addPlace} />
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-slate-800" />
-
-            {/* Itinerary section */}
+            {/* Your trip section */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Your trip</p>
+                <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">Your trip</p>
                 {places.length > 0 && (
                   <span className="text-[11px] bg-violet-950 text-violet-400 px-2 py-0.5 rounded-full border border-violet-800/60 font-medium">
                     {totalDays}d · {places.length} {places.length === 1 ? "city" : "cities"}
@@ -156,47 +152,46 @@ export default function Home() {
 
             {/* Trip name + generate — only when cities added */}
             {places.length > 0 && (
-              <>
-                <div className="border-t border-slate-800" />
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Trip name</p>
-                    <input
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
-                      placeholder="e.g. Europe Summer 2025"
-                      value={tripName}
-                      onChange={e => setTripName(e.target.value)}
-                    />
-                  </div>
-                  <button
-                    onClick={generateItinerary}
-                    disabled={generating}
-                    className="w-full bg-violet-600 hover:bg-violet-500 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40"
-                  >
-                    {generating ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Generating…
-                      </>
-                    ) : (
-                      <>✨ Generate Itinerary</>
-                    )}
-                  </button>
+              <div className="border-t border-white/5 pt-5 space-y-3">
+                <div>
+                  <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-2">Trip name</p>
+                  <input
+                    id="trip-name"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                    placeholder="e.g. Europe Summer 2025"
+                    value={tripName}
+                    onChange={e => setTripName(e.target.value)}
+                    aria-label="Trip name"
+                  />
                 </div>
-              </>
+                <button
+                  onClick={generateItinerary}
+                  disabled={generating}
+                  className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-white flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111118] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {generating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>✨ Generate Itinerary</>
+                  )}
+                </button>
+              </div>
             )}
           </div>
-        </div>
+        </aside>
 
         {/* Right: map + itinerary */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden bg-[#0d0d12]">
           <div className={`${itinerary ? "w-1/2" : "flex-1"} transition-all duration-300`}>
             <TripMap places={places} />
           </div>
 
           {itinerary && (
-            <div className="w-1/2 border-l border-slate-800 overflow-y-auto p-6 bg-slate-900">
-              <h2 className="text-base font-bold text-slate-100 mb-5 flex items-center gap-2">
+            <div className="w-1/2 bg-[#111118] border-l border-white/5 overflow-y-auto p-6">
+              <h2 className="text-base font-bold text-zinc-100 mb-5 flex items-center gap-2">
                 📅 {tripName || `${totalDays}-Day ${styleLabel} Trip`}
               </h2>
               <ItineraryView text={itinerary} streaming={generating} />
