@@ -70,9 +70,9 @@ export default function TripMap({ places }: Props) {
   }, [places]);
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden">
+    <div className="relative w-full h-full rounded-xl overflow-hidden" style={{ background: "#0d0d12" }}>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapRef} className="w-full h-full" style={{ background: "#0d0d12" }} />
       {places.length === 0 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <p className="text-slate-500 text-sm">Add places to see them on the map</p>
