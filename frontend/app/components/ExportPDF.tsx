@@ -18,7 +18,8 @@ const LABELS: Record<string, { icon: string; color: string }> = {
   Afternoon: { icon: "☀️",  color: "#eab308" },
   Evening:   { icon: "🌙", color: "#818cf8" },
   Tip:       { icon: "💡", color: "#34d399" },
-  Travel:    { icon: "🚇", color: "#38bdf8" },
+  Travel:      { icon: "🚇", color: "#38bdf8" },
+  Precautions: { icon: "⚠️", color: "#fb7185" },
 };
 
 function normalize(text: string): string {
@@ -31,7 +32,8 @@ function normalize(text: string): string {
     .replace(/\.?\s*(Afternoon):/gi, "\nAfternoon:")
     .replace(/\.?\s*(Evening):/gi,   "\nEvening:")
     .replace(/\.?\s*(Tip):/gi,       "\nTip:")
-    .replace(/\.?\s*(Travel):/gi,    "\nTravel:")
+    .replace(/\.?\s*(Travel):/gi,       "\nTravel:")
+    .replace(/\.?\s*(Precautions):/gi,  "\nPrecautions:")
     .replace(/\bing:/gi,  "\nEvening:")
     .replace(/\n{3,}/g, "\n\n");
 }
@@ -53,7 +55,7 @@ function parse(text: string): DayBlock[] {
       }
       continue;
     }
-    const match = line.match(/^(Morning|Afternoon|Evening|Tip|Travel):\s*([\s\S]*)/);
+    const match = line.match(/^(Morning|Afternoon|Evening|Tip|Travel|Precautions):\s*([\s\S]*)/);
     if (match) {
       const [, label, content] = match;
       if (!current) { current = { header: "", segments: [] }; days.push(current); }
@@ -82,14 +84,16 @@ function buildHtml(tripName: string, places: Place[], styles: string[], itinerar
     Afternoon: "#fffbe6",
     Evening:   "#f0f0ff",
     Tip:       "#edfdf5",
-    Travel:    "#e0f7ff",
+    Travel:      "#e0f7ff",
+    Precautions: "#fff0f0",
   };
   const segBorder: Record<string, string> = {
-    Morning:   "#f59e0b",
-    Afternoon: "#eab308",
-    Evening:   "#818cf8",
-    Tip:       "#34d399",
-    Travel:    "#38bdf8",
+    Morning:     "#f59e0b",
+    Afternoon:   "#eab308",
+    Evening:     "#818cf8",
+    Tip:         "#34d399",
+    Travel:      "#38bdf8",
+    Precautions: "#fb7185",
   };
 
   const dayHtml = days.map(day => {

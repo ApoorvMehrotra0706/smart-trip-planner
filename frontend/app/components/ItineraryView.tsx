@@ -19,7 +19,8 @@ const LABELS: Record<string, { icon: string; color: string; bg: string }> = {
   Afternoon: { icon: "☀️",  color: "text-yellow-300", bg: "bg-yellow-900/20 border-yellow-700/40" },
   Evening:   { icon: "🌙", color: "text-indigo-300",  bg: "bg-indigo-900/20 border-indigo-700/40" },
   Tip:       { icon: "💡", color: "text-emerald-300", bg: "bg-emerald-900/20 border-emerald-700/40" },
-  Travel:    { icon: "🚇", color: "text-sky-300",     bg: "bg-sky-900/20 border-sky-700/40" },
+  Travel:      { icon: "🚇", color: "text-sky-300",    bg: "bg-sky-900/20 border-sky-700/40" },
+  Precautions: { icon: "⚠️", color: "text-rose-300",  bg: "bg-rose-900/20 border-rose-700/40" },
 };
 
 function normalize(text: string): string {
@@ -32,7 +33,8 @@ function normalize(text: string): string {
     .replace(/\.?\s*(Afternoon):/gi,  "\nAfternoon:")
     .replace(/\.?\s*(Evening):/gi,    "\nEvening:")
     .replace(/\.?\s*(Tip):/gi,        "\nTip:")
-    .replace(/\.?\s*(Travel):/gi,     "\nTravel:")
+    .replace(/\.?\s*(Travel):/gi,       "\nTravel:")
+    .replace(/\.?\s*(Precautions):/gi,  "\nPrecautions:")
     .replace(/\bing:/gi,  "\nEvening:")
     .replace(/\n{3,}/g, "\n\n");
 }
@@ -57,7 +59,7 @@ function parse(text: string): DayBlock[] {
       continue;
     }
 
-    const match = line.match(/^(Morning|Afternoon|Evening|Tip|Travel):\s*([\s\S]*)/);
+    const match = line.match(/^(Morning|Afternoon|Evening|Tip|Travel|Precautions):\s*([\s\S]*)/);
     if (match) {
       const [, label, content] = match;
       const meta = LABELS[label];
@@ -190,7 +192,7 @@ export default function ItineraryView({ text, streaming = false }: { text: strin
           )}
           <div className="space-y-3 pl-1">
             {day.segments.map((seg, si) => {
-              const places = (seg.label !== "Tip" && seg.label !== "Travel") ? detectPlaces(seg.content) : [];
+              const places = !["Tip", "Travel", "Precautions"].includes(seg.label) ? detectPlaces(seg.content) : [];
               return (
                 <div key={si} className={`rounded-xl border px-4 py-3 ${seg.bg}`}>
                   <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest mb-1.5 ${seg.color}`}>

@@ -83,7 +83,8 @@ def build_prompt(cities: list) -> str:
             example_lines.append(
                 f"Day {day_num} - {c['name']}\n"
                 f"Morning: [activity]\nAfternoon: [activity]\nEvening: [activity]\n"
-                f"Tip: [practical tip]{travel_example}"
+                f"Tip: [practical tip]{travel_example}\n"
+                f"Precautions: [safety tips, dress codes, scam warnings, health or weather precautions relevant to today's activities]"
             )
             day_num += 1
     example_format = "\n\n".join(example_lines)
@@ -109,7 +110,8 @@ Rules:
 - Do NOT skip any label. Do NOT put activity text on the Day line.
 - Number days consecutively across all cities (Day 1, Day 2, ..., Day {total_days}).
 - Be specific with real place names and attractions for each city.
-- Match each city's activities to its assigned travel style.{travel_rule}"""
+- Match each city's activities to its assigned travel style.{travel_rule}
+- Every day MUST include a Precautions line with safety tips, scam warnings, dress codes, health or weather advice relevant to that day's specific activities and locations."""
 
 
 async def stream_groq(prompt: str):
