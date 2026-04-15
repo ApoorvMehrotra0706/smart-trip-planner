@@ -102,7 +102,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#0d0d12]">
+    <div className="flex flex-col w-full h-screen overflow-hidden bg-[#0d0d12]">
 
       {/* Header */}
       <header className="flex items-center justify-between px-5 bg-[#13131e] border-b border-white/8 shrink-0" style={{ height: "60px" }}>
