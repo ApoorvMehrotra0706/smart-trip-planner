@@ -37,7 +37,7 @@ export default function SearchBar({ onAdd }: Props) {
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2.5 bg-white/5 border border-white/[0.08] rounded-xl px-3.5 py-2.5 focus-within:border-violet-500/60 focus-within:ring-2 focus-within:ring-violet-500/15 transition-all">
+      <div className="flex items-center gap-2.5 bg-[#1e1e2a] border border-white/12 rounded-xl px-3.5 py-2.5 focus-within:border-violet-500/70 focus-within:ring-2 focus-within:ring-violet-500/20 transition-all">
         <svg className="w-4 h-4 text-zinc-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z" />
         </svg>

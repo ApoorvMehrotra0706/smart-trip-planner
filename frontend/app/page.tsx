@@ -105,14 +105,14 @@ export default function Home() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#0d0d12]">
 
       {/* Header */}
-      <header className="flex items-center gap-3 px-5 bg-[#111118] border-b border-white/5 shrink-0" style={{ height: "60px" }}>
-        <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-xl shadow-lg shadow-violet-900/40 shrink-0">
+      <header className="flex items-center gap-3 px-5 bg-[#13131e] border-b border-white/8 shrink-0" style={{ height: "60px" }}>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center text-lg shadow-lg shadow-violet-900/40 shrink-0">
             🧭
           </div>
-          <span className="font-bold text-zinc-100 text-base tracking-tight">Smart Trip Planner</span>
+          <span className="font-bold text-zinc-100 text-[15px] tracking-tight truncate">Smart Trip Planner</span>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto shrink-0">
           <AuthButton />
         </div>
       </header>
@@ -121,19 +121,19 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left sidebar */}
-        <aside className="w-[300px] flex flex-col bg-[#111118] border-r border-white/5 overflow-y-auto shrink-0">
+        <aside className="w-[300px] flex flex-col bg-[#13131e] border-r border-white/8 overflow-y-auto shrink-0">
           <div className="px-4 py-5 space-y-6">
 
             {/* Search section */}
             <div>
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-3">Search cities</p>
+              <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.1em] mb-3">Search cities</p>
               <SearchBar onAdd={addPlace} />
             </div>
 
             {/* Your trip section */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em]">Your trip</p>
+                <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.1em]">Your trip</p>
                 {places.length > 0 && (
                   <span className="text-[11px] bg-violet-950 text-violet-400 px-2 py-0.5 rounded-full border border-violet-800/60 font-medium">
                     {totalDays}d · {places.length} {places.length === 1 ? "city" : "cities"}
@@ -154,10 +154,10 @@ export default function Home() {
             {places.length > 0 && (
               <div className="border-t border-white/5 pt-5 space-y-3">
                 <div>
-                  <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.08em] mb-2">Trip name</p>
+                  <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-[0.1em] mb-2">Trip name</p>
                   <input
                     id="trip-name"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                    className="w-full bg-[#1e1e2a] border border-white/12 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
                     placeholder="e.g. Europe Summer 2025"
                     value={tripName}
                     onChange={e => setTripName(e.target.value)}

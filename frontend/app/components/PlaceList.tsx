@@ -47,7 +47,7 @@ export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggl
   if (places.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center mb-3">
+        <div className="w-12 h-12 rounded-xl bg-[#1e1e2a] border border-white/10 flex items-center justify-center mb-3">
           <svg className="w-6 h-6 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -64,7 +64,7 @@ export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggl
       {places.map((place, i) => {
         const cityStyles = place.styles ?? ["relaxed"];
         return (
-          <div key={place.id} className="bg-white/5 hover:bg-white/[0.08] border border-white/5 rounded-xl px-4 py-3.5 space-y-3 transition-all">
+          <div key={place.id} className="bg-[#1a1a28] hover:bg-[#1e1e2e] border border-white/8 rounded-xl px-4 py-3.5 space-y-3 transition-all">
 
             {/* Top row: number + name + days + move + remove */}
             <div className="flex items-center gap-3">
