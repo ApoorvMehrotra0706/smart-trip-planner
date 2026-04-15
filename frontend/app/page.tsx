@@ -102,41 +102,48 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-950">
+
       {/* Header */}
-      <header className="flex items-center gap-4 px-6 py-3 bg-slate-900 border-b border-slate-800 shrink-0">
-        <span className="text-2xl">🧭</span>
-        <h1 className="text-lg font-bold text-slate-100">Smart Trip Planner</h1>
-        <span className="text-xs bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded-full border border-violet-700 shrink-0">AI-powered</span>
-        <input
-          className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 w-44 transition-all ml-6"
-          placeholder="Trip name..."
-          value={tripName}
-          onChange={e => setTripName(e.target.value)}
-        />
+      <header className="flex items-center gap-3 px-5 py-3 bg-slate-900 border-b border-slate-800/80 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center text-lg shadow-lg shadow-violet-900/40">
+            🧭
+          </div>
+          <span className="font-bold text-slate-100 text-base">Smart Trip Planner</span>
+          <span className="text-[11px] bg-violet-950 text-violet-400 px-2 py-0.5 rounded-full border border-violet-800/60 font-medium">AI</span>
+        </div>
         <div className="ml-auto">
           <AuthButton />
         </div>
       </header>
 
-      {/* Main layout */}
+      {/* Body */}
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left panel */}
-        <div className="w-80 flex flex-col bg-slate-900 border-r border-slate-800 overflow-y-auto shrink-0">
-          <div className="p-4 space-y-5">
+        <div className="w-72 flex flex-col bg-slate-900 border-r border-slate-800/80 overflow-y-auto shrink-0">
+          <div className="p-5 space-y-6">
 
-            {/* Search */}
+            {/* Search section */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Add Cities</label>
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Search cities</p>
               <SearchBar onAdd={addPlace} />
             </div>
 
-            {/* Place list with per-city duration */}
+            {/* Divider */}
+            <div className="border-t border-slate-800" />
+
+            {/* Itinerary section */}
             <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-                Your Itinerary {places.length > 0 && <span className="text-violet-400">({places.length} {places.length === 1 ? "city" : "cities"})</span>}
-              </label>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Your trip</p>
+                {places.length > 0 && (
+                  <span className="text-[11px] bg-violet-950 text-violet-400 px-2 py-0.5 rounded-full border border-violet-800/60 font-medium">
+                    {totalDays}d · {places.length} {places.length === 1 ? "city" : "cities"}
+                  </span>
+                )}
+              </div>
               <PlaceList
                 places={places}
                 onRemove={removePlace}
@@ -147,53 +154,57 @@ export default function Home() {
               />
             </div>
 
-            {/* Generate button */}
+            {/* Trip name + generate — only when cities added */}
             {places.length > 0 && (
-              <button
-                onClick={generateItinerary}
-                disabled={generating}
-                className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40"
-              >
-                {generating ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Generating...
-                  </>
-                ) : "✨ Generate Itinerary"}
-              </button>
+              <>
+                <div className="border-t border-slate-800" />
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Trip name</p>
+                    <input
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                      placeholder="e.g. Europe Summer 2025"
+                      value={tripName}
+                      onChange={e => setTripName(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    onClick={generateItinerary}
+                    disabled={generating}
+                    className="w-full bg-violet-600 hover:bg-violet-500 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-900/40"
+                  >
+                    {generating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Generating…
+                      </>
+                    ) : (
+                      <>✨ Generate Itinerary</>
+                    )}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
 
         {/* Right: map + itinerary */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Map */}
-          <div className={`${itinerary ? "w-1/2" : "flex-1"} p-4 transition-all duration-300`}>
+          <div className={`${itinerary ? "w-1/2" : "flex-1"} transition-all duration-300`}>
             <TripMap places={places} />
           </div>
 
-          {/* Itinerary */}
           {itinerary && (
-            <div className="w-1/2 border-l border-slate-800 overflow-y-auto p-6 bg-slate-900/50">
-              <h2 className="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
+            <div className="w-1/2 border-l border-slate-800 overflow-y-auto p-6 bg-slate-900">
+              <h2 className="text-base font-bold text-slate-100 mb-5 flex items-center gap-2">
                 📅 {tripName || `${totalDays}-Day ${styleLabel} Trip`}
               </h2>
               <ItineraryView text={itinerary} streaming={generating} />
               {!generating && (
-                <>
-                  <SaveTrip
-                    tripName={tripName}
-                    places={places}
-                    styles={allStyles}
-                    itinerary={itinerary}
-                  />
-                  <ExportPDF
-                    tripName={tripName}
-                    places={places}
-                    styles={allStyles}
-                    itinerary={itinerary}
-                  />
-                </>
+                <div className="mt-6 space-y-3">
+                  <SaveTrip tripName={tripName} places={places} styles={allStyles} itinerary={itinerary} />
+                  <ExportPDF tripName={tripName} places={places} styles={allStyles} itinerary={itinerary} />
+                </div>
               )}
             </div>
           )}
