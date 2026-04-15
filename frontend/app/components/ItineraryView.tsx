@@ -48,7 +48,7 @@ function parse(text: string): DayBlock[] {
 
   for (const line of lines) {
     if (/^Day\s+\d+/i.test(line)) {
-      const dayMatch = line.match(/^(Day\s+\d+(?:\s*[-–]\s*\S+)?)/i);
+      const dayMatch = line.match(/^(Day\s+\d+(?:\s*[-–]\s*.+)?)/i);
       let header = (dayMatch ? dayMatch[1] : line).replace(/:$/, "").trim();
       const rest = dayMatch ? line.slice(dayMatch[0].length).replace(/^[\s:,]+/, "").trim() : "";
       current = { header, segments: [] };
