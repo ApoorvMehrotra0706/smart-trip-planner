@@ -11,6 +11,15 @@ export default function TripMap({ places }: Props) {
   const leafletMap = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
 
+  // Invalidate map size on window resize (handles monitor DPI/resolution changes)
+  useEffect(() => {
+    function handleResize() {
+      leafletMap.current?.invalidateSize();
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return;
 
