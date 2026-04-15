@@ -2,10 +2,10 @@
 import { Place } from "../lib/types";
 
 const STYLES = [
-  { value: "adventure", emoji: "🧗" },
-  { value: "relaxed",   emoji: "🌴" },
-  { value: "cultural",  emoji: "🏛️" },
-  { value: "budget",    emoji: "💰" },
+  { value: "adventure", emoji: "🧗", label: "Adventure" },
+  { value: "relaxed",   emoji: "🌴", label: "Relaxed"   },
+  { value: "cultural",  emoji: "🏛️", label: "Cultural"  },
+  { value: "budget",    emoji: "💰", label: "Budget"    },
 ];
 
 interface Props {
@@ -92,14 +92,14 @@ export default function PlaceList({ places, onRemove, onDaysChange, onStyleToggl
                 <button
                   key={s.value}
                   onClick={() => onStyleToggle(place.id, s.value)}
-                  title={s.value.charAt(0).toUpperCase() + s.value.slice(1)}
-                  className={`text-base px-1.5 py-0.5 rounded-lg border transition-all ${
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-all ${
                     cityStyles.includes(s.value)
-                      ? "border-violet-500 bg-violet-900/50"
-                      : "border-slate-700 bg-slate-700/30 opacity-40 hover:opacity-70"
+                      ? "border-violet-500 bg-violet-900/50 text-violet-200"
+                      : "border-slate-700 bg-slate-700/30 text-slate-500 hover:opacity-70"
                   }`}
                 >
-                  {s.emoji}
+                  <span>{s.emoji}</span>
+                  <span>{s.label}</span>
                 </button>
               ))}
             </div>
