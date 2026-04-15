@@ -8,9 +8,9 @@ import json
 import os
 from database import init_db, save_trip, get_trip, list_trips, delete_trip
 
-HF_TOKEN = os.getenv("HF_TOKEN", "")
-HF_MODEL = os.getenv("HF_MODEL", "qwen/qwen2.5-7b-instruct")
-HF_API_URL = os.getenv("HF_API_URL", "https://router.huggingface.co/novita/v3/openai/chat/completions")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
@@ -98,37 +98,43 @@ Rules:
 - Match each city's activities to its assigned travel style."""
 
 
-async def stream_huggingface(prompt: str):
+async def stream_groq(prompt: str):
     headers = {
-        "Authorization": f"Bearer {HF_TOKEN}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
     payload = {
-        "model": HF_MODEL,
+        "model": GROQ_MODEL,
         "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 1200,
+        "max_tokens": 2048,
         "temperature": 0.7,
         "stream": True,
     }
-    async with httpx.AsyncClient(timeout=120) as client:
-        async with client.stream("POST", HF_API_URL, headers=headers, json=payload) as response:
-            if response.status_code != 200:
-                error = await response.aread()
-                raise Exception(f"HuggingFace error {response.status_code}: {error.decode()}")
-            async for line in response.aiter_lines():
-                if not line or not line.startswith("data:"):
-                    continue
-                raw = line[5:].strip()
-                if raw == "[DONE]":
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            async with client.stream("POST", GROQ_API_URL, headers=headers, json=payload) as response:
+                if response.status_code != 200:
+                    error = await response.aread()
+                    yield f"data: ⚠️ Groq error {response.status_code}: {error.decode()}\n\n"
                     yield "data: [DONE]\n\n"
-                    break
-                try:
-                    data = json.loads(raw)
-                    token = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
-                    if token:
-                        yield f"data: {token}\n\n"
-                except (json.JSONDecodeError, IndexError):
-                    continue
+                    return
+                async for line in response.aiter_lines():
+                    if not line or not line.startswith("data:"):
+                        continue
+                    raw = line[5:].strip()
+                    if raw == "[DONE]":
+                        yield "data: [DONE]\n\n"
+                        return
+                    try:
+                        data = json.loads(raw)
+                        token = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                        if token:
+                            yield f"data: {token}\n\n"
+                    except (json.JSONDecodeError, IndexError):
+                        continue
+    except Exception as e:
+        yield f"data: ⚠️ Generation failed: {str(e)}\n\n"
+        yield "data: [DONE]\n\n"
 
 
 async def stream_ollama(prompt: str):
@@ -153,15 +159,15 @@ async def stream_ollama(prompt: str):
 
 
 def get_stream(prompt: str):
-    if HF_TOKEN:
-        return stream_huggingface(prompt)
+    if GROQ_API_KEY:
+        return stream_groq(prompt)
     return stream_ollama(prompt)
 
 
 @app.get("/health")
 async def health():
-    mode = "huggingface" if HF_TOKEN else "ollama"
-    return {"status": "ok", "ai_mode": mode, "model": HF_MODEL if HF_TOKEN else OLLAMA_MODEL}
+    mode = "groq" if GROQ_API_KEY else "ollama"
+    return {"status": "ok", "ai_mode": mode, "model": GROQ_MODEL if GROQ_API_KEY else OLLAMA_MODEL}
 
 
 @app.post("/api/itinerary")
