@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { API_URL } from "../lib/api";
 
@@ -17,16 +19,35 @@ const styleEmojis: Record<string, string> = {
 };
 
 export default function HistoryPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [trips, setTrips] = useState<TripSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/trips`)
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (!session?.backendToken) return;
+    fetch(`${API_URL}/api/trips`, {
+      headers: { "Authorization": `Bearer ${session.backendToken}` },
+    })
       .then(r => r.json())
       .then(setTrips)
       .catch(() => setTrips([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [session?.backendToken]);
+
+  if (status === "loading" || (status === "unauthenticated")) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">

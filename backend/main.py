@@ -1,12 +1,19 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import httpx
 import json
 import os
-from database import init_db, save_trip, get_trip, list_trips, delete_trip
+import jwt
+import bcrypt
+from datetime import datetime, timedelta, timezone
+from database import (
+    init_db, save_trip, get_trip, list_trips, delete_trip,
+    create_user, get_user_by_email, get_user_by_google_id, link_google_id,
+)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
@@ -17,6 +24,48 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",")
 
+JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRY_DAYS = 30
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+# ── JWT helpers ───────────────────────────────────────────────────────────────
+
+def make_token(user_id: str, email: str) -> str:
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRY_DAYS),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def decode_token(token: str) -> dict | None:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.PyJWTError:
+        return None
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> dict | None:
+    if not credentials:
+        return None
+    return decode_token(credentials.credentials)
+
+
+async def require_user(
+    user: dict | None = Depends(get_current_user),
+) -> dict:
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return user
+
+
+# ── Lifespan / app setup ──────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,6 +82,25 @@ app.add_middleware(
 )
 
 
+# ── Request / response models ─────────────────────────────────────────────────
+
+class SignupRequest(BaseModel):
+    email: str
+    name: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class GoogleAuthRequest(BaseModel):
+    google_id: str
+    email: str
+    name: str
+
+
 class ItineraryRequest(BaseModel):
     cities: list   # [{"name": str, "days": int, "styles": list[str]}]
 
@@ -44,6 +112,53 @@ class SaveTripRequest(BaseModel):
     style: str
     itinerary: str
 
+
+# ── Auth endpoints ────────────────────────────────────────────────────────────
+
+@app.post("/auth/signup")
+async def signup(req: SignupRequest):
+    existing = await get_user_by_email(req.email)
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already registered")
+    password_hash = bcrypt.hashpw(req.password.encode(), bcrypt.gensalt()).decode()
+    user = await create_user(req.email, req.name, password_hash=password_hash)
+    token = make_token(user["id"], user["email"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"]}}
+
+
+@app.post("/auth/login")
+async def login(req: LoginRequest):
+    user = await get_user_by_email(req.email)
+    if not user or not user.get("password_hash"):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not bcrypt.checkpw(req.password.encode(), user["password_hash"].encode()):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    token = make_token(user["id"], user["email"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"]}}
+
+
+@app.post("/auth/google")
+async def google_auth(req: GoogleAuthRequest):
+    # Try to find by google_id first, then by email
+    user = await get_user_by_google_id(req.google_id)
+    if not user:
+        user = await get_user_by_email(req.email)
+        if user:
+            # Existing email account — link the google_id
+            await link_google_id(user["id"], req.google_id)
+        else:
+            # Brand-new user via Google
+            user = await create_user(req.email, req.name, google_id=req.google_id)
+    token = make_token(user["id"], user["email"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"]}}
+
+
+@app.get("/auth/me")
+async def me(user: dict = Depends(require_user)):
+    return {"id": user["sub"], "email": user["email"]}
+
+
+# ── AI helpers ────────────────────────────────────────────────────────────────
 
 def build_prompt(cities: list) -> str:
     style_descriptions = {
@@ -69,7 +184,6 @@ def build_prompt(cities: list) -> str:
     city_schedule = "\n".join(city_lines)
     total_days = sum(c["days"] for c in cities)
 
-    # Build example format — include Travel line only when hotel is provided
     any_hotel = any(c.get("hotel", "").strip() for c in cities)
     example_lines = []
     day_num = 1
@@ -180,6 +294,8 @@ def get_stream(prompt: str):
     return stream_ollama(prompt)
 
 
+# ── Public endpoints ──────────────────────────────────────────────────────────
+
 @app.get("/health")
 async def health():
     mode = "groq" if GROQ_API_KEY else "ollama"
@@ -196,17 +312,6 @@ async def generate_itinerary(req: ItineraryRequest):
     )
 
 
-@app.post("/api/trips")
-async def create_trip(req: SaveTripRequest):
-    slug = await save_trip(req.name, req.places, req.days, req.style, req.itinerary)
-    return {"slug": slug, "url": f"/trip/{slug}"}
-
-
-@app.get("/api/trips")
-async def get_all_trips():
-    return await list_trips()
-
-
 @app.get("/api/trips/{slug}")
 async def fetch_trip(slug: str):
     trip = await get_trip(slug)
@@ -215,9 +320,22 @@ async def fetch_trip(slug: str):
     return trip
 
 
+# ── Protected trip endpoints ──────────────────────────────────────────────────
+
+@app.post("/api/trips")
+async def create_trip(req: SaveTripRequest, user: dict = Depends(require_user)):
+    slug = await save_trip(req.name, req.places, req.days, req.style, req.itinerary, user_id=user["sub"])
+    return {"slug": slug, "url": f"/trip/{slug}"}
+
+
+@app.get("/api/trips")
+async def get_all_trips(user: dict = Depends(require_user)):
+    return await list_trips(user["sub"])
+
+
 @app.delete("/api/trips/{slug}")
-async def remove_trip(slug: str):
-    deleted = await delete_trip(slug)
+async def remove_trip(slug: str, user: dict = Depends(require_user)):
+    deleted = await delete_trip(slug, user["sub"])
     if not deleted:
-        raise HTTPException(status_code=404, detail="Trip not found")
+        raise HTTPException(status_code=404, detail="Trip not found or not yours")
     return {"deleted": slug}

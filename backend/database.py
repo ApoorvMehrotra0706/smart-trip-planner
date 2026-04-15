@@ -50,6 +50,16 @@ def _rows(result) -> list[dict]:
 
 async def init_db():
     await _turso("""
+        CREATE TABLE IF NOT EXISTS users (
+            id            TEXT PRIMARY KEY,
+            email         TEXT UNIQUE NOT NULL,
+            name          TEXT,
+            password_hash TEXT,
+            google_id     TEXT,
+            created_at    TEXT NOT NULL
+        )
+    """)
+    await _turso("""
         CREATE TABLE IF NOT EXISTS trips (
             id         TEXT PRIMARY KEY,
             slug       TEXT UNIQUE NOT NULL,
@@ -58,9 +68,15 @@ async def init_db():
             days       INTEGER NOT NULL,
             style      TEXT NOT NULL,
             itinerary  TEXT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            user_id    TEXT
         )
     """)
+    # Migrate existing trips table — add user_id if missing
+    try:
+        await _turso("ALTER TABLE trips ADD COLUMN user_id TEXT")
+    except Exception:
+        pass  # Column already exists
 
 
 def make_slug(name: str) -> str:
@@ -68,22 +84,53 @@ def make_slug(name: str) -> str:
     return f"{base}-{uuid.uuid4().hex[:6]}" if base else uuid.uuid4().hex[:6]
 
 
-async def save_trip(name: str, places: list, days: int, style: str, itinerary: str) -> str:
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+async def create_user(email: str, name: str, password_hash: str | None = None, google_id: str | None = None) -> dict:
+    user_id = str(uuid.uuid4())
+    now = datetime.utcnow().isoformat()
+    await _turso(
+        "INSERT INTO users (id, email, name, password_hash, google_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        [user_id, email, name, password_hash, google_id, now],
+    )
+    return {"id": user_id, "email": email, "name": name}
+
+
+async def get_user_by_email(email: str) -> dict | None:
+    result = await _turso("SELECT * FROM users WHERE email = ?", [email])
+    rows = _rows(result)
+    return rows[0] if rows else None
+
+
+async def get_user_by_google_id(google_id: str) -> dict | None:
+    result = await _turso("SELECT * FROM users WHERE google_id = ?", [google_id])
+    rows = _rows(result)
+    return rows[0] if rows else None
+
+
+async def link_google_id(user_id: str, google_id: str) -> None:
+    await _turso("UPDATE users SET google_id = ? WHERE id = ?", [google_id, user_id])
+
+
+# ── Trips ─────────────────────────────────────────────────────────────────────
+
+async def save_trip(name: str, places: list, days: int, style: str, itinerary: str, user_id: str | None = None) -> str:
     slug    = make_slug(name or "trip")
     trip_id = str(uuid.uuid4())
     now     = datetime.utcnow().isoformat()
     await _turso(
-        "INSERT INTO trips (id, slug, name, places, days, style, itinerary, created_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [trip_id, slug, name, json.dumps(places), days, style, itinerary, now],
+        "INSERT INTO trips (id, slug, name, places, days, style, itinerary, created_at, user_id) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [trip_id, slug, name, json.dumps(places), days, style, itinerary, now, user_id],
     )
     return slug
 
 
-async def list_trips() -> list:
+async def list_trips(user_id: str) -> list:
     result = await _turso(
         "SELECT slug, name, days, style, created_at, places "
-        "FROM trips ORDER BY created_at DESC LIMIT 50"
+        "FROM trips WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+        [user_id],
     )
     return [
         {
@@ -99,11 +146,10 @@ async def list_trips() -> list:
 
 
 async def get_trip(slug: str) -> dict | None:
-    result = await _turso("SELECT * FROM trips WHERE slug = ?", [slug])
-    rows   = _rows(result)
-    if not rows:
+    result = _rows(await _turso("SELECT * FROM trips WHERE slug = ?", [slug]))
+    if not result:
         return None
-    r = rows[0]
+    r = result[0]
     return {
         "id":         r["id"],
         "slug":       r["slug"],
@@ -116,6 +162,8 @@ async def get_trip(slug: str) -> dict | None:
     }
 
 
-async def delete_trip(slug: str) -> bool:
-    result = await _turso("DELETE FROM trips WHERE slug = ?", [slug])
+async def delete_trip(slug: str, user_id: str) -> bool:
+    result = await _turso(
+        "DELETE FROM trips WHERE slug = ? AND user_id = ?", [slug, user_id]
+    )
     return (result.get("affected_row_count") or 0) > 0

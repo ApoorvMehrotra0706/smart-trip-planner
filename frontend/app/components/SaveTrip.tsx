@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { Place } from "../lib/types";
 import { API_URL } from "../lib/api";
 
@@ -21,6 +23,7 @@ function getSafeOrigin(): string {
 }
 
 export default function SaveTrip({ tripName, places, styles, itinerary }: Props) {
+  const { data: session } = useSession();
   const days = places.reduce((s, p) => s + (p.days ?? 3), 0);
   const style = styles.join(", ");
   const [saving, setSaving] = useState(false);
@@ -28,13 +31,31 @@ export default function SaveTrip({ tripName, places, styles, itinerary }: Props)
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Not logged in — prompt to sign in
+  if (!session?.backendToken) {
+    return (
+      <div className="mt-3 p-3 bg-slate-800 rounded-xl border border-slate-700 text-center">
+        <p className="text-xs text-slate-400 mb-2">Sign in to save & share your trip</p>
+        <Link
+          href="/login"
+          className="inline-block text-xs bg-violet-600 hover:bg-violet-500 text-white px-4 py-1.5 rounded-lg transition-colors font-medium"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+
   async function save() {
     setSaving(true);
     setError(null);
     try {
       const res = await fetch(`${API_URL}/api/trips`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session!.backendToken}`,
+        },
         body: JSON.stringify({
           name: tripName || `${days}-Day ${style} Trip`,
           places,

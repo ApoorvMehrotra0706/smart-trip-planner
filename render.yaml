@@ -12,3 +12,5 @@ services:
         value: mistralai/Mistral-7B-Instruct-v0.3
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: JWT_SECRET
+        sync: false

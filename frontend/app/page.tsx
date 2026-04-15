@@ -9,6 +9,7 @@ import ExportPDF from "./components/ExportPDF";
 import ItineraryView from "./components/ItineraryView";
 import Link from "next/link";
 import { API_URL } from "./lib/api";
+import AuthButton from "./components/AuthButton";
 
 const TripMap = dynamic(() => import("./components/Map"), { ssr: false });
 
@@ -112,6 +113,7 @@ export default function Home() {
           <Link href="/history" className="text-xs text-slate-400 hover:text-violet-400 transition-colors">
             🕓 History
           </Link>
+          <AuthButton />
           <input
             className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-violet-500 w-48"
             placeholder="Trip name..."
